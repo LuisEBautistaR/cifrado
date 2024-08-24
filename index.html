@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cifrado y Descifrado RSA de Valores en JSON - Modo Oscuro</title>
+    <!-- Bootstrap CSS con Modo Oscuro -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Prism.js CSS con Modo Oscuro -->
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.28.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <!-- CSS personalizado -->
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Cifrado y Descifrado RSA de Valores en JSON</h1>
+        
+        <!-- Pestañas -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="encrypt-tab" data-bs-toggle="tab" data-bs-target="#encrypt" type="button" role="tab" aria-controls="encrypt" aria-selected="true">Cifrar</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="decrypt-tab" data-bs-toggle="tab" data-bs-target="#decrypt" type="button" role="tab" aria-controls="decrypt" aria-selected="false">Descifrar</button>
+            </li>
+        </ul>
+
+        <!-- Contenidos de las Pestañas -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Pestaña de Cifrado -->
+            <div class="tab-pane fade show active" id="encrypt" role="tabpanel" aria-labelledby="encrypt-tab">
+                <form id="jsonForm">
+                    <div class="mb-3 code-editor">
+                        <label for="jsonInput" class="form-label">JSON de entrada:</label>
+                        <textarea id="jsonInput" class="form-control" rows="10" required></textarea>
+                        <pre><code id="jsonHighlight" class="language-json"></code></pre>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Selección de Clave Pública:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="keyOption" id="useDefaultKey" value="default" checked>
+                            <label class="form-check-label" for="useDefaultKey">
+                                Usar Clave Pública Predeterminada
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="keyOption" id="useCustomKey" value="custom">
+                            <label class="form-check-label" for="useCustomKey">
+                                Usar Clave Pública Personalizada
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="customKeyContainer" style="display:none;">
+                        <label for="publicKeyInput" class="form-label">Clave Pública (opcional):</label>
+                        <textarea id="publicKeyInput" class="form-control bg-dark text-light" rows="5" placeholder="Ingrese su clave pública en formato PEM"></textarea>
+                        <button type="button" class="btn btn-secondary mt-2" id="saveKeyButton">Guardar Clave Pública</button>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Validar JSON</button>
+                    </div>
+                </form>
+
+                <div id="checkboxContainer" class="mt-4"></div>
+
+                <form id="encryptionForm" class="mt-4" style="display:none;">
+                    <div class="mb-3">
+                        <label for="encryptionType" class="form-label">Tipo de Cifrado:</label>
+                        <select id="encryptionType" class="form-select bg-dark text-light" required>
+                            <option value="RSA-OAEP">RSA/OAEP con SHA-256</option>
+                            <option value="RSA-PKCS1">RSA/ECB/PKCS1Padding</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Cifrar Seleccionados</button>
+                    </div>
+                </form>
+
+                <h2 class="text-center mt-5">JSON Cifrado:</h2>
+                <pre id="encryptedJson" class="bg-light p-3 border rounded language-json"><code></code></pre>
+            </div>
+
+            <!-- Pestaña de Descifrado -->
+            <div class="tab-pane fade" id="decrypt" role="tabpanel" aria-labelledby="decrypt-tab">
+                <form id="decryptJsonForm">
+                    <div class="mb-3 code-editor">
+                        <label for="encryptedInput" class="form-label">JSON Cifrado:</label>
+                        <textarea id="encryptedInput" class="form-control" rows="10" required></textarea>
+                        <pre><code id="encryptedJsonHighlight" class="language-json"></code></pre>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Selección de Clave Privada:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="privateKeyOption" id="useDefaultPrivateKey" value="default" checked>
+                            <label class="form-check-label" for="useDefaultPrivateKey">
+                                Usar Clave Privada Predeterminada
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="privateKeyOption" id="useCustomPrivateKey" value="custom">
+                            <label class="form-check-label" for="useCustomPrivateKey">
+                                Usar Clave Privada Personalizada
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="customPrivateKeyContainer" style="display:none;">
+                        <label for="privateKeyInput" class="form-label">Clave Privada (opcional):</label>
+                        <textarea id="privateKeyInput" class="form-control bg-dark text-light" rows="5" placeholder="Ingrese su clave privada en formato PEM"></textarea>
+                        <button type="button" class="btn btn-secondary mt-2" id="savePrivateKeyButton">Guardar Clave Privada</button>
+                    </div>
+                    <div class="mb-3">
+                        <label for="decryptionType" class="form-label">Tipo de Cifrado Utilizado:</label>
+                        <select id="decryptionType" class="form-select bg-dark text-light" required>
+                            <option value="RSA-OAEP">RSA/OAEP con SHA-256</option>
+                            <option value="RSA-PKCS1">RSA/ECB/PKCS1Padding</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Validar JSON Cifrado</button>
+                    </div>
+                </form>
+
+                <div id="decryptCheckboxContainer" class="mt-4"></div>
+
+                <form id="decryptionForm" class="mt-4" style="display:none;">
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Descifrar Seleccionados</button>
+                    </div>
+                </form>
+
+                <h2 class="text-center mt-5">JSON Descifrado:</h2>
+                <pre id="decryptedJson" class="bg-light p-3 border rounded language-json"><code></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incluye la librería JSEncrypt -->
+    <script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.0.0-rc.1/bin/jsencrypt.min.js"></script>
+    <!-- Prism.js JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.28.0/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.28.0/components/prism-json.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript personalizado -->
+    <script src="script.js"></script>
+</body>
+</html>
